@@ -7335,17 +7335,6 @@ static void update_sw_icl_max(struct smb_charger *chg, int pst)
 		 */
 		if (!is_client_vote_enabled(chg->usb_icl_votable,
 						USB_PSY_VOTER)) {
-<<<<<<< HEAD
-			/* if flash is active force 500mA */
-			vote(chg->usb_icl_votable, USB_PSY_VOTER, true,
-					is_flash_active(chg) ?
-					SDP_CURRENT_UA : SDP_100_MA);
-			vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, false, 0);
-		} else if ((chg->typec_mode == POWER_SUPPLY_TYPEC_NONE) && (val.intval == true))
-			vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, true, SDP_CURRENT_UA);
-		else
-			vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, false, 0);
-=======
 			/* Set current for DC_IN or uUSB based on flash
 			 * active.
 			 */
@@ -7363,7 +7352,6 @@ static void update_sw_icl_max(struct smb_charger *chg, int pst)
 						SDP_CURRENT_UA : SDP_100_MA);
 		}
 		vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, false, 0);
->>>>>>> df88f3e0f387f45d79e409775b74b7ce975c2c36
 		break;
 	case POWER_SUPPLY_TYPE_USB_CDP:
 		if (is_client_vote_enabled(chg->usb_icl_votable,	USB_PSY_VOTER))

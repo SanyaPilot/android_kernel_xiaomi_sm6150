@@ -870,6 +870,16 @@ struct smb_charger {
 	int 			qc3p5_power_limit_w;
 
 	bool			pps_fcc_therm_work_disabled;
+	/* GPIO DCIN Supply */
+	int			micro_usb_gpio;
+	int			micro_usb_irq;
+	int			dc_9v_gpio;
+	int			dc_9v_irq;
+	int			usb_switch_gpio;
+	int			usb_hub_33v_en_gpio;
+	int			micro_usb_pre_state;
+	bool			dcin_uusb_over_gpio_en;
+	bool			aicl_disable;
 };
 
 enum quick_charge_type {
@@ -883,16 +893,6 @@ enum quick_charge_type {
 struct quick_charge {
 	enum power_supply_type adap_type;
 	enum quick_charge_type adap_cap;
-	/* GPIO DCIN Supply */
-	int			micro_usb_gpio;
-	int			micro_usb_irq;
-	int			dc_9v_gpio;
-	int			dc_9v_irq;
-	int			usb_switch_gpio;
-	int			usb_hub_33v_en_gpio;
-	int			micro_usb_pre_state;
-	bool			dcin_uusb_over_gpio_en;
-	bool			aicl_disable;
 };
 
 int smblib_read(struct smb_charger *chg, u16 addr, u8 *val);
