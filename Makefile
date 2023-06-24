@@ -427,7 +427,7 @@ AFLAGS_KERNEL	=
 LDFLAGS_vmlinux =
 
 HOSTLDFLAGS += -fuse-ld=lld
-HOSTCFLAGS += -fuse-ld=lld
+HOSTCFLAGS += -fuse-ld=lld -Wno-unused-command-line-argument
 
 # Use USERINCLUDE when you must reference the UAPI directories only.
 USERINCLUDE    := \
