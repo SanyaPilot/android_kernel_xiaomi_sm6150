@@ -1,56 +1,58 @@
-#! /bin/bash
+#!/bin/bash
+#
+# Compile script for Kernel
+# Copyright (C)
 
-# clone or update Clang if it alreay exists
-set -e
+SECONDS=0 # builtin bash timer
+CLANG_DIR="$HOME/clang"
+AK3_DIR="$HOME/AnyKernel3"
+DEFCONFIG="tucana_defconfig"
 
-echo -e "Start building Phobos Kernel\n"
+ZIPNAME="Kernel-tucana-$(date '+%Y%m%d-%H%M').zip"
 
-if [ -r clang ]; then
-    echo "* Clang found! * "
-    cd clang
-    git config pull.rebase false
-    cd ..
-else
-    echo "* Clang not found, cloning it now * "
-    git clone --depth=1 https://gitlab.com/Panchajanya1999/azure-clang clang
+if test -z "$(git rev-parse --show-cdup 2>/dev/null)" &&
+   head=$(git rev-parse --verify HEAD 2>/dev/null); then
+	ZIPNAME="${ZIPNAME::-4}-$(echo $head | cut -c1-8).zip"
 fi
 
-KERNEL_DEFCONFIG=tucana_defconfig
-KERNELDIR=$PWD/
-export PATH="${PWD}/clang/bin:${PATH}"
-export ARCH=arm64
-export SUBARCH=arm64
-export KBUILD_COMPILER_STRING="$(${PWD}/clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
-# speed up build process
-MAKE="./makeparallel"
+MAKE_PARAMS="O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 \
+	AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy \
+	OBJDUMP=llvm-objdump STRIP=llvm-strip \
+	CROSS_COMPILE=aarch64-linux-gnu-"
 
-# cleanup
-echo -e "\n* Cleaning *\n"
-if [ -r out ]; then
-    rm -rf out
+export PATH="$CLANG_DIR/bin:$PATH"
+
+if [[ $1 = "-c" || $1 = "--clean" ]]; then
+	make $MAKE_PARAMS clean
+	make $MAKE_PARAMS mrproper
+	echo "Cleaned output folder"
 fi
+
 mkdir -p out
+make $MAKE_PARAMS $DEFCONFIG
 
-# build kernel
-echo "* Kernel defconfig is set to $KERNEL_DEFCONFIG *"
-echo -e "* Building kernel *\n"
-make $KERNEL_DEFCONFIG O=out
-make -j$(nproc --all) O=out \
-                      ARCH=arm64 \
-                      CC=clang \
-                      CROSS_COMPILE=aarch64-linux-gnu- \
-                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-                      NM=llvm-nm \
-                      OBJCOPY=llvm-objcopy \
-                      OBJDUMP=llvm-objdump \
-                      STRIP=llvm-strip \
-                      LD=ld.lld
+echo -e "\nStarting compilation...\n"
+make -j$(nproc) $MAKE_PARAMS || exit $?
 
-echo
-echo "    ____  __          __                  __ __                     __"
-echo "   / __ \/ /_  ____  / /_  ____  _____   / // /__  _________  ___  / /"
-echo "  / /_/ / __ \/ __ \/ __ \/ __ \/ ___/  /   </ _ \/ ___/ __ \/ _ \/ / "
-echo " / ____/ / / / /_/ / /_/ / /_/ (__  )  / /| /  __/ /  / / / /  __/ /  "
-echo "/_/   /_/ /_/\____/_____/\____/____/  /_/ |_\___/_/  /_/ /_/\___/_/   "
-echo
+kernel="out/arch/arm64/boot/Image.gz-dtb"
+
+if [ ! -f "$kernel" ]; then
+	echo -e "\nCompilation failed!"
+	exit 1
+fi
+
+echo -e "\nKernel compiled succesfully! Zipping up...\n"
+if [ -d "$AK3_DIR" ]; then
+	cp -r $AK3_DIR AnyKernel3
+	git -C AnyKernel3 checkout tucana &> /dev/null
+elif ! git clone -q https://github.com/ghostrider-reborn/AnyKernel3 -b lisa; then
+	echo -e "\nAnyKernel3 repo not found locally and couldn't clone from GitHub! Aborting..."
+	exit 1
+fi
+cp $kernel AnyKernel3
+cd AnyKernel3
+zip -r9 "../../../Output/$ZIPNAME" * -x .git README.md
+cd ..
+rm -rf AnyKernel3
+echo -e "\nCompleted in $((SECONDS / 60)) dakika ve $((SECONDS % 60)) saniye."
+echo "Zip: $ZIPNAME"
