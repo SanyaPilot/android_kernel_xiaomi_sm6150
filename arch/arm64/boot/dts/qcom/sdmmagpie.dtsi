@@ -465,6 +465,7 @@
 	firmware: firmware {
 		android {
 			compatible = "android,firmware";
+			boot_devices = "soc/1d84000.ufshc";
 			vbmeta {
 				compatible = "android,vbmeta";
 				parts = "vbmeta,boot,system,vendor,dtbo,recovery";
@@ -477,7 +478,7 @@
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
 					fsmgr_flags = "wait,avb";
-					status = "ok";
+					status = "disabled";
 				};
 				system_ext {
 					compatible = "android,system_ext";
@@ -485,6 +486,7 @@
 					type = "ext4";
 					mnt_flags = "ro,noatime,nodev,barrier=1";
 					fsmgr_flags = "wait";
+					status = "disabled";
 				};
 			};
 		};
